@@ -119,7 +119,18 @@ Describe 'Sync-AgentDoneToast' {
             (Get-Outcome $first (Join-Path $sandbox.Install 'invoke.ps1')).Outcome | Should -Be ([FileOutcome]::Created)
             (Get-Outcome $first $toml).Outcome | Should -Be ([FileOutcome]::Created)
             (Get-Outcome $first $toml).BackupPath | Should -BeExactly ''
-            Test-Path -LiteralPath (Join-Path $sandbox.Menu 'AgentDoneToast.lnk') | Should -BeFalse
+            $shortcutPath = Join-Path $sandbox.Menu 'AgentDoneToast.lnk'
+            $shortcutChange = $null
+            foreach ($change in $first.Files) {
+                if ($change.Path -eq $shortcutPath) { $shortcutChange = $change }
+            }
+            if ($null -eq $shortcutChange) {
+                Test-Path -LiteralPath $shortcutPath | Should -BeFalse
+            }
+            else {
+                $shortcutChange.Outcome | Should -Be ([FileOutcome]::Created)
+                Test-Path -LiteralPath $shortcutPath | Should -BeTrue
+            }
 
             $raw = [System.IO.File]::ReadAllText($settings)
             $raw | Should -Not -Match 'agent_done_toast_keep_array'
@@ -221,6 +232,7 @@ Describe 'Sync-AgentDoneToast' {
             $left | Should -Contain 'C:\bin\other.exe'
             @($left | Where-Object { $_ -like '*invoke.ps1*' }).Count | Should -Be 0
             $after.hooks.PSObject.Properties.Name | Should -Not -Contain 'Notification'
+            Test-Path -LiteralPath (Join-Path $sandbox.Menu 'AgentDoneToast.lnk') | Should -BeFalse
             Test-Path -LiteralPath $toml | Should -BeTrue
             [System.IO.File]::ReadAllText($toml) | Should -Not -Match 'notify ='
 
@@ -331,8 +343,13 @@ Describe 'Sync-AgentDoneToast' {
             $sandbox.Install = Join-Path $sandbox.Root 'Program Files\AgentDoneToast'
             $report = Invoke-Sync $sandbox ([SyncMode]::Apply)
             $report.Files.Count | Should -BeGreaterThan 0
-            $settings = [System.IO.File]::ReadAllText((Join-Path $sandbox.Profile '.claude\settings.json'))
-            $settings | Should -Match '"[^"]*Program Files[/\\]AgentDoneToast[/\\]invoke\.ps1\\?"'
+            $settingsPath = Join-Path $sandbox.Profile '.claude\settings.json'
+            $doc = [System.IO.File]::ReadAllText($settingsPath) | ConvertFrom-Json
+            $hooks = @($(@($doc.hooks.Stop)[0].hooks))
+            $command = [string]$hooks[0].command
+            $invoke = Join-Path $sandbox.Install 'invoke.ps1'
+            $command.Contains('-File "' + $invoke + '"') | Should -BeTrue
+            $command | Should -Match 'claude-stop'
         }
         finally {
             Remove-Sandbox $sandbox
