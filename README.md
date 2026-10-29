@@ -6,7 +6,7 @@ On Windows 10 and Windows 11, agent-done-toast shows you a toast when Claude Cod
 
 ## Quick start
 
-1. Open PowerShell in this folder.
+1. Clone the repo: `git clone https://github.com/kamilkaczmareksolutions/agent-done-toast` and `cd agent-done-toast`.
 2. Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\install.ps1`.
 3. Finish a Claude Code turn. You see the title `Claude Code finished` and the project directory as the body.
 
