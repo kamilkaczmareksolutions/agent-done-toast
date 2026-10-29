@@ -1,0 +1,26 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  windows-powershell-5-1:
+    name: Pester (Windows PowerShell 5.1)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Pester
+        shell: powershell
+        run: |
+          & ./.github/pester.ps1
+
+  powershell-7:
+    name: Pester (PowerShell 7)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Pester
+        shell: pwsh
+        run: |
+          & ./.github/pester.ps1

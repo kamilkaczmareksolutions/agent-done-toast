@@ -1,0 +1,5 @@
+{
+  "hook_event_name": "Notification",
+  "notification_type": "agent_needs_input",
+  "cwd": "C:\\src\\widget"
+}

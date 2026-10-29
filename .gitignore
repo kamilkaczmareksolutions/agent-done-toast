@@ -1,0 +1,3 @@
+*.agent-done-toast.bak
+*.agent-done-toast.tmp
+testResults.xml

@@ -1,0 +1,5 @@
+{
+  "hook_event_name": "stop",
+  "status": "aborted",
+  "cwd": "C:\\src\\widget"
+}
