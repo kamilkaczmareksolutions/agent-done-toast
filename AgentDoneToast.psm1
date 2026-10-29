@@ -1,6 +1,3 @@
-# PowerShell exports classes even when functions stay private.
-# CLI payloads are not classes. The payload string dies inside ConvertTo-IntakeResult.
-
 enum AgentKind {
     Claude
     Codex
@@ -71,7 +68,6 @@ class ToastRequest {
     [string]$ProjectDirectory
 }
 
-# Words and id the toast will show. Derived from ToastRequest. No XML here.
 class ToastNote {
     [string]$Title
     [string]$Body
@@ -86,8 +82,6 @@ class StayQuiet {
     [QuietReason]$Reason
 }
 
-# Invariant: Outcome Conflict uses a Conflict other than None and an empty BackupPath.
-# Every other outcome uses Conflict None.
 class FileChange {
     [string]$Path
     [FileOutcome]$Outcome
@@ -795,6 +789,16 @@ namespace AgentDoneToastShortcut {
     Add-Type -TypeDefinition $source -Language CSharp
 }
 
+function Get-ShortcutAppIdOrNull {
+    param([Parameter(Mandatory = $true)][string]$Path)
+    try {
+        return [AgentDoneToastShortcut.Writer]::ReadAppId($Path)
+    }
+    catch {
+        return $null
+    }
+}
+
 function Sync-StartMenuShortcut {
     param(
         [Parameter(Mandatory = $true)][string]$StartMenuPrograms,
@@ -816,14 +820,8 @@ function Sync-StartMenuShortcut {
     $appId = Get-ToastAppId
     $target = Get-WindowsPowerShellExe
     if (Test-Path -LiteralPath $shortcutPath) {
-        try {
-            $current = [AgentDoneToastShortcut.Writer]::ReadAppId($shortcutPath)
-            if ($current -eq $appId) {
-                return New-FileChange -Path $shortcutPath -Outcome ([FileOutcome]::Unchanged)
-            }
-        }
-        catch {
-            # A shortcut we cannot read is rewritten below.
+        if ((Get-ShortcutAppIdOrNull -Path $shortcutPath) -eq $appId) {
+            return New-FileChange -Path $shortcutPath -Outcome ([FileOutcome]::Unchanged)
         }
         [AgentDoneToastShortcut.Writer]::Save($shortcutPath, $appId, $target)
         return New-FileChange -Path $shortcutPath -Outcome ([FileOutcome]::Updated)
